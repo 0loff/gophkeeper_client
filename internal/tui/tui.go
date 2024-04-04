@@ -1,9 +1,13 @@
 package tui
 
 import (
+	"context"
+
 	"github.com/0loff/gophkeeper_client/internal/app"
 	tcell "github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+
+	pb "github.com/0loff/gophkeeper_server/proto"
 )
 
 var (
@@ -29,18 +33,60 @@ func NewAppView(a *app.App) *Tui {
 		App: a,
 	}
 
+	go tui.UserDataWorker(tui.App.TokenCh, tui.App.StatusCh)
+
 	return tui
 }
 
-func (tui *Tui) queueUpdate(f func()) {
+func (t *Tui) UserDataWorker(tokenCh, statusCh chan string) {
+	for {
+		select {
+		case t.App.JWT = <-tokenCh:
+			t.App.Textdata = t.App.Requestor.NewRequest(context.Background(), t.App.JWT).GetTextData()
+
+			t.Preview.Clear()
+			t.renderDataLists()
+
+			t.ShowCreateDataModal()
+
+		case status := <-statusCh:
+			if status == "success" {
+				t.App.Textdata = t.App.Requestor.NewRequest(context.Background(), t.App.JWT).GetTextData()
+
+				t.renderDataLists()
+			}
+		}
+	}
+}
+
+func (t *Tui) renderDataLists() {
+	t.DataList.Clear()
+	t.queueUpdateDraw(func() {
+		for _, textdata := range t.App.Textdata.Data {
+			t.DataList.AddItem(textdata.Metainfo, textdata.Text, rune('*'), func() {
+				t.viewTextData(textdata)
+			})
+		}
+	})
+}
+
+func (t *Tui) viewTextData(data *pb.TextdataEntry) {
+	t.queueUpdateDraw(func() {
+		t.Preview.Clear()
+		t.Preview.
+			AddItem(t.TextdataForm(data, "Update"), 1, 1, 2, 4, 0, 0, true)
+	})
+}
+
+func (t *Tui) queueUpdate(f func()) {
 	go func() {
-		tui.AppView.QueueUpdate(f)
+		t.AppView.QueueUpdate(f)
 	}()
 }
 
-func (tui *Tui) queueUpdateDraw(f func()) {
+func (t *Tui) queueUpdateDraw(f func()) {
 	go func() {
-		tui.AppView.QueueUpdateDraw(f)
+		t.AppView.QueueUpdateDraw(f)
 	}()
 }
 
@@ -48,10 +94,12 @@ func (t *Tui) Init() {
 	t.AppView = tview.NewApplication()
 	t.Pages = tview.NewPages()
 
-	t.DataList = tview.NewList().ShowSecondaryText(true).SetSecondaryTextColor(tcell.ColorDimGray)
+	t.DataList = tview.NewList().ShowSecondaryText(false).SetSecondaryTextColor(tcell.ColorDimGray)
 	// t.Preview = tview.NewList().ShowSecondaryText(true).SetSecondaryTextColor(tcell.ColorDimGray)
-	t.Preview = tview.NewGrid().SetRows(0, 0, 0, 0, 0).SetColumns(0, 0, 0, 0, 0)
+	t.Preview = tview.NewGrid()
 	t.FooterText = tview.NewTextView().SetTextAlign(tview.AlignCenter).SetText(TitleFooterView).SetTextColor(tcell.ColorGray)
+
+	t.DataList.SetSelectedFunc(t.dataSelected)
 
 	navigate := tview.NewGrid().SetRows(0).
 		AddItem(t.DataList, 0, 0, 1, 1, 0, 0, true)
@@ -59,55 +107,64 @@ func (t *Tui) Init() {
 	t.Grid = tview.NewGrid().
 		SetRows(0, 2).
 		SetColumns(40, 0).
-		SetBorders(true).
+		SetBorders(false).
 		AddItem(navigate, 0, 0, 1, 1, 0, 0, true).
 		AddItem(t.Preview, 0, 1, 1, 1, 0, 0, false).
 		AddItem(t.FooterText, 1, 0, 1, 2, 0, 0, false)
 
-	t.AppView.SetInputCapture(t.inputActions)
+	t.setupKeyBoard()
 
-	// t.Pages.AddPage("Modal", t.ShowModal(), true, false)
-	// t.Pages.AddPage("Auth", t.AuthView(), true, false)
-
-	// modal := tview.NewModal().
-	// 	SetText("This is a new modal window")
-
-	// t.pages.AddPage("Login", modal, true, false)
-
-	// if t.App.Token == "" {
-
-	// 		t.ShowAuthForm()
-	// 	})
-	// }
+	if t.App.JWT == "" {
+		t.ShowLoginForm()
+	}
 
 	if err := t.AppView.SetRoot(t.Grid, true).EnableMouse(true).Run(); err != nil {
 		panic(err)
 	}
 }
 
-func (t *Tui) inputActions(e *tcell.EventKey) *tcell.EventKey {
-	switch pressed_key := e.Rune(); pressed_key {
-	case rune(tcell.KeyCtrlQ):
-		t.AppView.Stop()
-	case rune(tcell.KeyCtrlL):
-		t.ShowLoginForm()
-	case rune(tcell.KeyCtrlR):
-		t.ShowAuthForm()
-	}
-
-	return e
-}
-
 func (t *Tui) ShowAuthForm() {
 	t.Preview.Clear()
 	t.queueUpdateDraw(func() {
-		t.Preview.AddItem(t.AuthForm(), 2, 2, 1, 1, 0, 0, true)
+		t.Preview.
+			SetRows(0, 0, 0, 0, 0).SetColumns(0, 0, 0, 0, 0, 0, 0).
+			AddItem(t.AuthForm(), 2, 2, 1, 2, 0, 0, true)
 	})
 }
 
 func (t *Tui) ShowLoginForm() {
 	t.Preview.Clear()
 	t.queueUpdateDraw(func() {
-		t.Preview.AddItem(t.LoginForm(), 2, 2, 1, 1, 0, 0, true)
+		t.Preview.
+			SetRows(0, 0, 0, 0, 0).SetColumns(0, 0, 0, 0, 0, 0, 0).
+			AddItem(t.LoginForm(), 2, 2, 1, 2, 0, 0, true)
+	})
+}
+
+func (t *Tui) ShowCreateTextDataForm() {
+	t.Preview.Clear()
+
+	t.queueUpdateDraw(func() {
+		t.Preview.
+			SetRows(0, 0, 0, 0, 0).SetColumns(0, 0, 0, 0, 0, 0, 0).
+			AddItem(t.TextdataForm(&pb.TextdataEntry{}, "Create"), 2, 1, 2, 4, 0, 0, true)
+	})
+}
+
+func (t *Tui) ShowCreateCredsDataForm() {
+	t.Preview.Clear()
+
+	t.queueUpdateDraw(func() {
+		t.Preview.
+			SetRows(0, 0, 0, 0, 0).SetColumns(0, 0, 0, 0, 0).
+			AddItem(t.CredsdataForm(&pb.CredsdataEntry{}, "Create"), 2, 1, 1, 2, 0, 0, true)
+	})
+}
+
+func (t *Tui) ShowCreateDataModal() {
+	t.Preview.Clear()
+
+	t.queueUpdateDraw(func() {
+		t.Preview.AddItem(t.CreateDataModal(), 2, 2, 1, 2, 0, 0, true)
 	})
 }

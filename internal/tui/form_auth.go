@@ -25,7 +25,7 @@ func (t *Tui) registerAction() {
 	PwdField := t.Form.GetFormItemByLabel("Password")
 	EmailField := t.Form.GetFormItemByLabel("Email")
 
-	t.App.TokenCh <- t.App.Request.SignUp(
+	t.App.TokenCh <- t.App.Requestor.NewRequest(context.Background(), t.App.JWT).SignUp(
 		context.Background(),
 		LoginField.(*tview.InputField).GetText(),
 		PwdField.(*tview.InputField).GetText(),

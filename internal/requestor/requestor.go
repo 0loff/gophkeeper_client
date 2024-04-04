@@ -15,13 +15,30 @@ type Requestor struct {
 	GrpcClient pb.GophkeeperClient
 }
 
+type Request struct {
+	Client pb.GophkeeperClient
+	Ctx    context.Context
+}
+
 func NewRequestor() *Requestor {
 	return &Requestor{}
 }
 
-func (r *Requestor) SignUp(ctx context.Context, uname, pwd, email string) string {
+func (r *Requestor) NewRequest(ctx context.Context, token string) Request {
+	if token != "" {
+		md := metadata.New(map[string]string{"token": token})
+		ctx = metadata.NewOutgoingContext(ctx, md)
+	}
+
+	return Request{
+		Client: r.GrpcClient,
+		Ctx:    ctx,
+	}
+}
+
+func (r Request) SignUp(ctx context.Context, uname, pwd, email string) string {
 	var header metadata.MD
-	r.GrpcClient.UserAuth(ctx, &pb.UserAuthRequest{
+	r.Client.UserAuth(ctx, &pb.UserAuthRequest{
 		Login:    uname,
 		Password: pwd,
 		Email:    email,
@@ -35,9 +52,9 @@ func (r *Requestor) SignUp(ctx context.Context, uname, pwd, email string) string
 	return token[0]
 }
 
-func (r *Requestor) SignIn(ctx context.Context, email, pwd string) string {
+func (r Request) SignIn(ctx context.Context, email, pwd string) string {
 	var header metadata.MD
-	r.GrpcClient.UserLogin(ctx, &pb.UserLoginRequest{
+	r.Client.UserLogin(ctx, &pb.UserLoginRequest{
 		Email:    email,
 		Password: pwd,
 	}, grpc.Header(&header))
@@ -50,15 +67,51 @@ func (r *Requestor) SignIn(ctx context.Context, email, pwd string) string {
 	return token[0]
 }
 
-func (r *Requestor) GetTextData(ctx context.Context, token string) *pb.TextdataEntriesResponse {
-	md := metadata.New(map[string]string{"token": token})
-	ctx = metadata.NewOutgoingContext(ctx, md)
+func (r Request) GetTextData() *pb.TextdataEntriesResponse {
 
-	td, err := r.GrpcClient.TextdataGet(ctx, &emptypb.Empty{})
+	td, err := r.Client.TextdataGet(r.Ctx, &emptypb.Empty{})
 	if err != nil {
 		logger.Log.Error("Error during receiving user text data", zap.Error(err))
 	}
 
 	return td
+}
 
+func (r Request) CreateTextData(ctx context.Context, text, metainfo string) string {
+	cb, err := r.Client.TextdataCreate(r.Ctx, &pb.TextDataStoreRequest{
+		Text:     text,
+		Metainfo: metainfo,
+	})
+	if err != nil {
+		logger.Log.Error("Cannot store user data", zap.Error(err))
+	}
+
+	return cb.Status
+}
+
+func (r Request) UpdateTextData(ctx context.Context, id int, text, metainfo string) string {
+	cb, err := r.Client.TextdataUpdate(r.Ctx, &pb.TextDataUpdateRequest{
+		ID:       int64(id),
+		Text:     text,
+		Metainfo: metainfo,
+	})
+	if err != nil {
+		logger.Log.Error("Cannot update user data", zap.Error(err))
+		return "fail"
+	}
+
+	return cb.Status
+}
+
+func (r Request) CreateCredsData(ctx context.Context, username, password, metainfo string) string {
+	cb, err := r.Client.CredsdataCreate(r.Ctx, &pb.CredsdataStoreRequest{
+		Username: username,
+		Password: password,
+		Metainfo: metainfo,
+	})
+	if err != nil {
+		logger.Log.Error("Cannot store user credentianls", zap.Error(err))
+	}
+
+	return cb.Status
 }
