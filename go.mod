@@ -3,10 +3,8 @@ module github.com/0loff/gophkeeper_client
 go 1.21.1
 
 require (
-	github.com/0loff/gophkeeper_server v0.0.0-20240403182021-f223092ed01a
+	github.com/0loff/gophkeeper_server v0.0.0-20240407165755-01eec43b9c6a
 	github.com/gdamore/tcell/v2 v2.7.4
-	github.com/golang-jwt/jwt/v4 v4.5.0
-	github.com/google/uuid v1.6.0
 	github.com/rivo/tview v0.0.0-20240307173318-e804876934a1
 	go.uber.org/zap v1.27.0
 	google.golang.org/grpc v1.62.1

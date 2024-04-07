@@ -7,6 +7,12 @@ import (
 	"github.com/0loff/gophkeeper_client/internal/requestor"
 )
 
+type info struct {
+	Version string
+	Commit  string
+	Date    string
+}
+
 type App struct {
 	Requestor *requestor.Requestor
 
@@ -14,7 +20,12 @@ type App struct {
 	TokenCh  chan string
 	JWT      string
 
-	Textdata *pb.TextdataEntriesResponse
+	Textdata  *pb.TextdataEntriesResponse
+	Credsdata *pb.CredsdataEntriesResponse
+	CardsData *pb.CardsdataEntriesResponse
+	Bindata   *pb.BindataEntriesResponse
+
+	Info info
 }
 
 func NewApp() *App {
@@ -25,12 +36,4 @@ func NewApp() *App {
 	}
 
 	return app
-}
-
-func (a *App) LoadData() {
-
-}
-
-func (a *App) GetTextData() {
-
 }

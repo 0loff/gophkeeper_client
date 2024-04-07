@@ -11,7 +11,7 @@ import (
 func (t *Tui) TextdataForm(data *pb.TextdataEntry, btn string) *tview.Form {
 	f := tview.NewForm().
 		AddInputField("Metainfo", data.Metainfo, 87, nil, nil).
-		AddTextArea("Text", data.Text, 87, 14, 0, nil).
+		AddTextArea("Text", data.Text, 87, 12, 0, nil).
 		AddButton(btn, func() {
 			switch btn {
 			case "Create":
@@ -21,6 +21,17 @@ func (t *Tui) TextdataForm(data *pb.TextdataEntry, btn string) *tview.Form {
 			}
 		}).
 		SetButtonsAlign(tview.AlignCenter)
+
+	if data.ID != 0 {
+		f.AddButton("Delete", func() {
+			t.TextdataDelete(data.ID)
+		})
+	}
+
+	f.AddButton("Close", func() {
+		t.Preview.Clear()
+		t.ShowCreateDataModal()
+	})
 
 	f.SetBorder(true)
 	f.SetTitle("Create Text Data Form")
@@ -38,6 +49,9 @@ func (t *Tui) TextdataCreation() {
 		textField.(*tview.TextArea).GetText(),
 		metainfoField.(*tview.InputField).GetText(),
 	)
+
+	t.Preview.Clear()
+	t.ShowCreateTextDataForm()
 }
 
 func (t *Tui) TextdataUpdating(id int64) {
@@ -50,4 +64,14 @@ func (t *Tui) TextdataUpdating(id int64) {
 		textField.(*tview.TextArea).GetText(),
 		metainfoField.(*tview.InputField).GetText(),
 	)
+}
+
+func (t *Tui) TextdataDelete(id int64) {
+	t.App.StatusCh <- t.App.Requestor.NewRequest(context.Background(), t.App.JWT).DeleteTextData(
+		context.Background(),
+		int(id),
+	)
+
+	t.Preview.Clear()
+	t.ShowCreateDataModal()
 }

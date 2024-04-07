@@ -4,7 +4,7 @@ import (
 	pb "github.com/0loff/gophkeeper_server/proto"
 )
 
-func (t *Tui) dataSelected(index int, mainText string, secondaryText string, shortcut rune) {
+func (t *Tui) TextdataSelected(index int, mainText string, secondaryText string, shortcut rune) {
 	var currentData *pb.TextdataEntry
 
 	for _, data := range t.App.Textdata.Data {
@@ -18,4 +18,55 @@ func (t *Tui) dataSelected(index int, mainText string, secondaryText string, sho
 	}
 
 	t.viewTextData(currentData)
+}
+
+func (t *Tui) CredsdataSelected(index int, mainText string, secondaryText string, shortcut rune) {
+	var currentData *pb.CredsdataEntry
+
+	for _, data := range t.App.Credsdata.Data {
+		if mainText == data.Metainfo && secondaryText == data.Username {
+			currentData = &pb.CredsdataEntry{
+				ID:       data.ID,
+				Username: data.Username,
+				Password: data.Password,
+				Metainfo: data.Metainfo,
+			}
+		}
+	}
+
+	t.viewCredsData(currentData)
+}
+
+func (t *Tui) CardsdataSelected(index int, mainText string, secondaryText string, shortcut rune) {
+	var currentData *pb.CardsdataEntry
+
+	for _, data := range t.App.CardsData.Data {
+		if mainText == data.Metainfo && secondaryText == data.Pan {
+			currentData = &pb.CardsdataEntry{
+				ID:       data.ID,
+				Pan:      data.Pan,
+				Expiry:   data.Expiry,
+				Holder:   data.Holder,
+				Metainfo: data.Metainfo,
+			}
+		}
+	}
+
+	t.viewCardsData(currentData)
+}
+
+func (t *Tui) BindataSelected(index int, mainText string, secondaryText string, shortcut rune) {
+	var currentData *pb.BindataEntry
+
+	for _, data := range t.App.Bindata.Data {
+		if mainText == data.Metainfo && secondaryText == string(data.Binary) {
+			currentData = &pb.BindataEntry{
+				ID:       data.ID,
+				Binary:   data.Binary,
+				Metainfo: data.Metainfo,
+			}
+		}
+	}
+
+	t.viewBinData(currentData)
 }

@@ -11,12 +11,23 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+var (
+	buildVersion string = "N/A"
+	buildDate    string = "N/A"
+	buildCommit  string = "N/A"
+)
+
 func main() {
 	Run(app.NewApp())
 }
 
 func Run(app *app.App) {
-	conn, err := grpc.Dial(":3200", grpc.WithTransportCredentials(insecure.NewCredentials()))
+
+	app.Info.Version = buildVersion
+	app.Info.Date = buildDate
+	app.Info.Commit = buildCommit
+
+	conn, err := grpc.Dial(":3211", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatal(err)
 	}
