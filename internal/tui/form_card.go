@@ -3,15 +3,44 @@ package tui
 import (
 	"context"
 
+	"github.com/0loff/gophkeeper_client/pkg/encryptor"
 	pb "github.com/0loff/gophkeeper_server/proto"
 	"github.com/rivo/tview"
 )
 
 func (t *Tui) CardsdataForm(data *pb.CardsdataEntry, btn string) *tview.Form {
+	var (
+		pan    []byte
+		exp    []byte
+		holder []byte
+		err    error
+	)
+
+	if data.Pan != nil {
+		pan, err = encryptor.Decrypt(data.Pan, t.App.GetUserKey())
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	if data.Expiry != nil {
+		exp, err = encryptor.Decrypt(data.Expiry, t.App.GetUserKey())
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	if data.Holder != nil {
+		holder, err = encryptor.Decrypt(data.Holder, t.App.GetUserKey())
+		if err != nil {
+			panic(err)
+		}
+	}
+
 	f := tview.NewForm().
-		AddInputField("Pan", data.Pan, 30, nil, nil).
-		AddInputField("Expiry date", data.Expiry, 10, nil, nil).
-		AddInputField("Card holder", data.Holder, 30, nil, nil).
+		AddInputField("Pan", string(pan), 30, nil, nil).
+		AddInputField("Expiry date", string(exp), 10, nil, nil).
+		AddInputField("Card holder", string(holder), 30, nil, nil).
 		AddInputField("Metainfo", data.Metainfo, 30, nil, nil).
 		AddButton(btn, func() {
 			switch btn {
@@ -47,11 +76,26 @@ func (t *Tui) CardsdataCreation() {
 	holderField := t.Form.GetFormItemByLabel("Card holder")
 	metainfoField := t.Form.GetFormItemByLabel("Metainfo")
 
+	encPan, err := encryptor.Encrypt([]byte(panField.(*tview.InputField).GetText()), t.App.GetUserKey())
+	if err != nil {
+		panic(err)
+	}
+
+	encExp, err := encryptor.Encrypt([]byte(expiryField.(*tview.InputField).GetText()), t.App.GetUserKey())
+	if err != nil {
+		panic(err)
+	}
+
+	encHolder, err := encryptor.Encrypt([]byte(holderField.(*tview.InputField).GetText()), t.App.GetUserKey())
+	if err != nil {
+		panic(err)
+	}
+
 	t.App.StatusCh <- t.App.Requestor.NewRequest(context.Background(), t.App.JWT).CreateCardData(
 		context.Background(),
-		panField.(*tview.InputField).GetText(),
-		expiryField.(*tview.InputField).GetText(),
-		holderField.(*tview.InputField).GetText(),
+		encPan,
+		encExp,
+		encHolder,
 		metainfoField.(*tview.InputField).GetText(),
 	)
 
@@ -65,12 +109,27 @@ func (t *Tui) CardsdataUpdating(id int64) {
 	holderField := t.Form.GetFormItemByLabel("Card holder")
 	metainfoField := t.Form.GetFormItemByLabel("Metainfo")
 
+	encPan, err := encryptor.Encrypt([]byte(panField.(*tview.InputField).GetText()), t.App.GetUserKey())
+	if err != nil {
+		panic(err)
+	}
+
+	encExp, err := encryptor.Encrypt([]byte(expiryField.(*tview.InputField).GetText()), t.App.GetUserKey())
+	if err != nil {
+		panic(err)
+	}
+
+	encHolder, err := encryptor.Encrypt([]byte(holderField.(*tview.InputField).GetText()), t.App.GetUserKey())
+	if err != nil {
+		panic(err)
+	}
+
 	t.App.StatusCh <- t.App.Requestor.NewRequest(context.Background(), t.App.JWT).UpdateCardsData(
 		context.Background(),
 		int(id),
-		panField.(*tview.InputField).GetText(),
-		expiryField.(*tview.InputField).GetText(),
-		holderField.(*tview.InputField).GetText(),
+		encPan,
+		encExp,
+		encHolder,
 		metainfoField.(*tview.InputField).GetText(),
 	)
 }

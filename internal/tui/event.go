@@ -47,7 +47,12 @@ func (t *Tui) CardsdataSelected(index int, mainText string, secondaryText string
 	var currentData *pb.CardsdataEntry
 
 	for _, data := range t.App.CardsData.Data {
-		if mainText == data.Metainfo && secondaryText == data.Pan {
+		pan, err := encryptor.Decrypt(data.Pan, t.App.GetUserKey())
+		if err != nil {
+			panic(err)
+		}
+
+		if mainText == data.Metainfo && secondaryText == string(pan) {
 			currentData = &pb.CardsdataEntry{
 				ID:       data.ID,
 				Pan:      data.Pan,

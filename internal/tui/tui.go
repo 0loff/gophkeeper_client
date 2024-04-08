@@ -131,8 +131,14 @@ func (t *Tui) renderCredsDataList() {
 func (t *Tui) renderCardsDataList() {
 	t.CardsDataList.Clear()
 	t.queueUpdateDraw(func() {
+
 		for _, cardsdata := range t.App.CardsData.Data {
-			t.CardsDataList.AddItem(cardsdata.Metainfo, cardsdata.Pan, rune('*'), func() {
+			pan, err := encryptor.Decrypt(cardsdata.Pan, t.App.GetUserKey())
+			if err != nil {
+				panic(err)
+			}
+
+			t.CardsDataList.AddItem(cardsdata.Metainfo, string(pan), rune('*'), func() {
 				t.viewCardsData(cardsdata)
 			})
 		}

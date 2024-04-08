@@ -175,7 +175,7 @@ func (r Request) GetCardsData() *pb.CardsdataEntriesResponse {
 	return cd
 }
 
-func (r Request) CreateCardData(ctx context.Context, pan, exp, holder, metainfo string) string {
+func (r Request) CreateCardData(ctx context.Context, pan, exp, holder []byte, metainfo string) string {
 	cb, err := r.Client.CardsdataCreate(r.Ctx, &pb.CardsdataStoreRequest{
 		Pan:      pan,
 		Expiry:   exp,
@@ -190,7 +190,7 @@ func (r Request) CreateCardData(ctx context.Context, pan, exp, holder, metainfo 
 	return cb.Status
 }
 
-func (r Request) UpdateCardsData(ctx context.Context, id int, pan, exp, holder, metainfo string) string {
+func (r Request) UpdateCardsData(ctx context.Context, id int, pan, exp, holder []byte, metainfo string) string {
 	cb, err := r.Client.CardsdataUpdate(r.Ctx, &pb.CardsdataUpdateRequest{
 		ID:       int64(id),
 		Pan:      pan,

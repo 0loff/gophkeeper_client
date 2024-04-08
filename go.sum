@@ -6,6 +6,8 @@ github.com/0loff/gophkeeper_server v0.0.0-20240408051251-c7011b79bb3c h1:bC1DiaF
 github.com/0loff/gophkeeper_server v0.0.0-20240408051251-c7011b79bb3c/go.mod h1:UsfZh9aTgxac6J1vFJwHhxPDXiJa1i0Iva9MkpynK0U=
 github.com/0loff/gophkeeper_server v0.0.0-20240408080442-e214be3f0f37 h1:DEPa8DGgnf5ewUXmbsoQ5xgQj03sZvqaUlTDzQJIKsU=
 github.com/0loff/gophkeeper_server v0.0.0-20240408080442-e214be3f0f37/go.mod h1:UsfZh9aTgxac6J1vFJwHhxPDXiJa1i0Iva9MkpynK0U=
+github.com/0loff/gophkeeper_server v0.0.0-20240408172803-434de4c4a676 h1:hKHdIzYJS0ZE3sKDCB3HvFeG68ukruLNDAoVfdixUbQ=
+github.com/0loff/gophkeeper_server v0.0.0-20240408172803-434de4c4a676/go.mod h1:UsfZh9aTgxac6J1vFJwHhxPDXiJa1i0Iva9MkpynK0U=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/gdamore/encoding v1.0.0/go.mod h1:alR0ol34c49FCSBLjhosxzcPHQbf2trDkoo5dl+VrEg=
