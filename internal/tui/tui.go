@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/0loff/gophkeeper_client/internal/app"
+	"github.com/0loff/gophkeeper_client/pkg/encryptor"
 	tcell "github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
@@ -115,7 +116,12 @@ func (t *Tui) renderCredsDataList() {
 	t.CredsDataList.Clear()
 	t.queueUpdateDraw(func() {
 		for _, credsdata := range t.App.Credsdata.Data {
-			t.CredsDataList.AddItem(credsdata.Metainfo, credsdata.Username, rune('*'), func() {
+			uname, err := encryptor.Decrypt(credsdata.Username, t.App.GetUserKey())
+			if err != nil {
+				panic(err)
+			}
+
+			t.CredsDataList.AddItem(credsdata.Metainfo, string(uname), rune('*'), func() {
 				t.viewCredsData(credsdata)
 			})
 		}

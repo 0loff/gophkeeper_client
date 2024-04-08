@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"github.com/0loff/gophkeeper_client/pkg/encryptor"
 	pb "github.com/0loff/gophkeeper_server/proto"
 )
 
@@ -24,7 +25,12 @@ func (t *Tui) CredsdataSelected(index int, mainText string, secondaryText string
 	var currentData *pb.CredsdataEntry
 
 	for _, data := range t.App.Credsdata.Data {
-		if mainText == data.Metainfo && secondaryText == data.Username {
+		uname, err := encryptor.Decrypt(data.Username, t.App.GetUserKey())
+		if err != nil {
+			panic(err)
+		}
+
+		if mainText == data.Metainfo && secondaryText == string(uname) {
 			currentData = &pb.CredsdataEntry{
 				ID:       data.ID,
 				Username: data.Username,

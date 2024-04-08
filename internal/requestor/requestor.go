@@ -125,7 +125,7 @@ func (r Request) GetCredsData() *pb.CredsdataEntriesResponse {
 	return cd
 }
 
-func (r Request) CreateCredsData(ctx context.Context, username, password, metainfo string) string {
+func (r Request) CreateCredsData(ctx context.Context, username, password []byte, metainfo string) string {
 	cb, err := r.Client.CredsdataCreate(r.Ctx, &pb.CredsdataStoreRequest{
 		Username: username,
 		Password: password,
@@ -138,7 +138,7 @@ func (r Request) CreateCredsData(ctx context.Context, username, password, metain
 	return cb.Status
 }
 
-func (r Request) UpdateCredsData(ctx context.Context, id int, username, password, metainfo string) string {
+func (r Request) UpdateCredsData(ctx context.Context, id int, username, password []byte, metainfo string) string {
 	cb, err := r.Client.CredsdataUpdate(r.Ctx, &pb.CredsdataUpdateRequest{
 		ID:       int64(id),
 		Username: username,

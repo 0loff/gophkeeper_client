@@ -5,13 +5,9 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"io"
-
-	"github.com/0loff/gophkeeper_client/internal/logger"
-	"go.uber.org/zap"
 )
 
 func generateRandom(size int) ([]byte, error) {
-	// генерируем криптостойкие случайные байты в b
 	b := make([]byte, size)
 	_, err := rand.Read(b)
 	if err != nil {
@@ -21,53 +17,48 @@ func generateRandom(size int) ([]byte, error) {
 	return b, nil
 }
 
-func Encrypt(data, uid string) ([]byte, error) {
-	// src := []byte(data)
+func Encrypt(data []byte, key []byte) ([]byte, error) {
 
-	// key := []byte(uid)
-
-	// aesBlock, err := aes.NewCipher(key)
-	// if err != nil {
-	// 	logger.Log.Error("Error during encrypting", zap.Error(err))
-	// 	return nil, err
-	// }
-
-	// aesgcm, err := cipher.NewGCM(aesBlock)
-	// if err != nil {
-	// 	logger.Log.Error("Error during encrypting", zap.Error(err))
-	// 	return nil, err
-	// }
-
-	// nonce, err := generateRandom(aesgcm.NonceSize())
-	// if err != nil {
-	// 	logger.Log.Error("Error during encrypting", zap.Error(err))
-	// 	return nil, err
-	// }
-
-	// dst := aesgcm.Seal(nil, nonce, src, nil)
-
-	// return dst, nil
-
-	block, err := aes.NewCipher([]byte(uid))
+	block, err := aes.NewCipher(key)
 	if err != nil {
-		logger.Log.Error("Error encrypting block creation", zap.Error(err))
 		return nil, err
 	}
 
 	nonce := make([]byte, 12)
 	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
-		logger.Log.Error("Error during encrypting", zap.Error(err))
 		return nil, err
 	}
 
 	aesgcm, err := cipher.NewGCM(block)
 	if err != nil {
-		logger.Log.Error("Error during encrypting", zap.Error(err))
 		return nil, err
 	}
 
-	ciphertext := aesgcm.Seal(nil, nonce, []byte(data), nil)
-	ciphertext = append(ciphertext, ciphertext...)
+	ciphertext := aesgcm.Seal(nil, nonce, data, nil)
+	ciphertext = append(nonce, ciphertext...)
 
 	return ciphertext, nil
+}
+
+func Decrypt(ciphertext []byte, key []byte) ([]byte, error) {
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	aesgcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+
+	nonceSize := aesgcm.NonceSize()
+	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
+
+	plaintext, err := aesgcm.Open(nil, nonce, ciphertext, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return plaintext, nil
 }

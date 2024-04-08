@@ -3,14 +3,33 @@ package tui
 import (
 	"context"
 
+	"github.com/0loff/gophkeeper_client/pkg/encryptor"
 	pb "github.com/0loff/gophkeeper_server/proto"
 	"github.com/rivo/tview"
 )
 
 func (t *Tui) CredsdataForm(data *pb.CredsdataEntry, btn string) *tview.Form {
+	var uname []byte
+	var pwd []byte
+	var err error
+
+	if data.Username != nil {
+		uname, err = encryptor.Decrypt(data.Username, t.App.GetUserKey())
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	if data.Password != nil {
+		pwd, err = encryptor.Decrypt(data.Password, t.App.GetUserKey())
+		if err != nil {
+			panic(err)
+		}
+	}
+
 	f := tview.NewForm().
-		AddInputField("Username", data.Username, 55, nil, nil).
-		AddInputField("Password", data.Password, 55, nil, nil).
+		AddInputField("Username", string(uname), 55, nil, nil).
+		AddInputField("Password", string(pwd), 55, nil, nil).
 		AddInputField("Metainfo", data.Metainfo, 55, nil, nil).
 		AddButton(btn, func() {
 			switch btn {
@@ -45,10 +64,20 @@ func (t *Tui) CredsdataCreation() {
 	passwordField := t.Form.GetFormItemByLabel("Password")
 	metainfoField := t.Form.GetFormItemByLabel("Metainfo")
 
+	encUsername, err := encryptor.Encrypt([]byte(usernameField.(*tview.InputField).GetText()), t.App.GetUserKey())
+	if err != nil {
+		panic(err)
+	}
+
+	encPassword, err := encryptor.Encrypt([]byte(passwordField.(*tview.InputField).GetText()), t.App.GetUserKey())
+	if err != nil {
+		panic(err)
+	}
+
 	t.App.StatusCh <- t.App.Requestor.NewRequest(context.Background(), t.App.JWT).CreateCredsData(
 		context.Background(),
-		usernameField.(*tview.InputField).GetText(),
-		passwordField.(*tview.InputField).GetText(),
+		encUsername,
+		encPassword,
 		metainfoField.(*tview.InputField).GetText(),
 	)
 }
@@ -58,11 +87,21 @@ func (t *Tui) CredsdataUpdating(id int64) {
 	passwordField := t.Form.GetFormItemByLabel("Password")
 	metainfoField := t.Form.GetFormItemByLabel("Metainfo")
 
+	encUname, err := encryptor.Encrypt([]byte(usernameField.(*tview.InputField).GetText()), t.App.GetUserKey())
+	if err != nil {
+		panic(err)
+	}
+
+	encPwd, err := encryptor.Encrypt([]byte(passwordField.(*tview.InputField).GetText()), t.App.GetUserKey())
+	if err != nil {
+		panic(err)
+	}
+
 	t.App.StatusCh <- t.App.Requestor.NewRequest(context.Background(), t.App.JWT).UpdateCredsData(
 		context.Background(),
 		int(id),
-		usernameField.(*tview.InputField).GetText(),
-		passwordField.(*tview.InputField).GetText(),
+		encUname,
+		encPwd,
 		metainfoField.(*tview.InputField).GetText(),
 	)
 }
