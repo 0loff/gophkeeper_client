@@ -19,21 +19,24 @@ func (t *Tui) CardsdataForm(data *pb.CardsdataEntry, btn string) *tview.Form {
 	if data.Pan != nil {
 		pan, err = encryptor.Decrypt(data.Pan, t.App.GetUserKey())
 		if err != nil {
-			panic(err)
+			t.showError("Cannot decrypt card pan")
+			t.ShowCreateCardsDataForm()
 		}
 	}
 
 	if data.Expiry != nil {
 		exp, err = encryptor.Decrypt(data.Expiry, t.App.GetUserKey())
 		if err != nil {
-			panic(err)
+			t.showError("Cannot decrypt card expiry")
+			t.ShowCreateCardsDataForm()
 		}
 	}
 
 	if data.Holder != nil {
 		holder, err = encryptor.Decrypt(data.Holder, t.App.GetUserKey())
 		if err != nil {
-			panic(err)
+			t.showError("Cannot decrypt card holder")
+			t.ShowCreateCardsDataForm()
 		}
 	}
 
@@ -78,17 +81,20 @@ func (t *Tui) CardsdataCreation() {
 
 	encPan, err := encryptor.Encrypt([]byte(panField.(*tview.InputField).GetText()), t.App.GetUserKey())
 	if err != nil {
-		panic(err)
+		t.showError("Cannot encrypt card pan")
+		return
 	}
 
 	encExp, err := encryptor.Encrypt([]byte(expiryField.(*tview.InputField).GetText()), t.App.GetUserKey())
 	if err != nil {
-		panic(err)
+		t.showError("Cannot encrypt card expiry")
+		return
 	}
 
 	encHolder, err := encryptor.Encrypt([]byte(holderField.(*tview.InputField).GetText()), t.App.GetUserKey())
 	if err != nil {
-		panic(err)
+		t.showError("Cannot encrypt card holder")
+		return
 	}
 
 	t.App.StatusCh <- t.App.Requestor.NewRequest(context.Background(), t.App.JWT).CreateCardData(
@@ -111,17 +117,20 @@ func (t *Tui) CardsdataUpdating(id int64) {
 
 	encPan, err := encryptor.Encrypt([]byte(panField.(*tview.InputField).GetText()), t.App.GetUserKey())
 	if err != nil {
-		panic(err)
+		t.showError("Cannot encrypt card pan")
+		return
 	}
 
 	encExp, err := encryptor.Encrypt([]byte(expiryField.(*tview.InputField).GetText()), t.App.GetUserKey())
 	if err != nil {
-		panic(err)
+		t.showError("Cannot encrypt card expiry")
+		return
 	}
 
 	encHolder, err := encryptor.Encrypt([]byte(holderField.(*tview.InputField).GetText()), t.App.GetUserKey())
 	if err != nil {
-		panic(err)
+		t.showError("Cannot encrypt card holder")
+		return
 	}
 
 	t.App.StatusCh <- t.App.Requestor.NewRequest(context.Background(), t.App.JWT).UpdateCardsData(

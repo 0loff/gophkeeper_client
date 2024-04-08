@@ -16,14 +16,16 @@ func (t *Tui) CredsdataForm(data *pb.CredsdataEntry, btn string) *tview.Form {
 	if data.Username != nil {
 		uname, err = encryptor.Decrypt(data.Username, t.App.GetUserKey())
 		if err != nil {
-			panic(err)
+			t.showError("Cannot decrypt credentials username")
+			t.ShowCreateCredsDataForm()
 		}
 	}
 
 	if data.Password != nil {
 		pwd, err = encryptor.Decrypt(data.Password, t.App.GetUserKey())
 		if err != nil {
-			panic(err)
+			t.showError("Cannot decrypt credentials password")
+			t.ShowCreateCredsDataForm()
 		}
 	}
 
@@ -66,12 +68,14 @@ func (t *Tui) CredsdataCreation() {
 
 	encUsername, err := encryptor.Encrypt([]byte(usernameField.(*tview.InputField).GetText()), t.App.GetUserKey())
 	if err != nil {
-		panic(err)
+		t.showError("Cannot encrypt username")
+		return
 	}
 
 	encPassword, err := encryptor.Encrypt([]byte(passwordField.(*tview.InputField).GetText()), t.App.GetUserKey())
 	if err != nil {
-		panic(err)
+		t.showError("Cannot encrypt password")
+		return
 	}
 
 	t.App.StatusCh <- t.App.Requestor.NewRequest(context.Background(), t.App.JWT).CreateCredsData(
@@ -89,12 +93,14 @@ func (t *Tui) CredsdataUpdating(id int64) {
 
 	encUname, err := encryptor.Encrypt([]byte(usernameField.(*tview.InputField).GetText()), t.App.GetUserKey())
 	if err != nil {
-		panic(err)
+		t.showError("Cannot encrypt username")
+		return
 	}
 
 	encPwd, err := encryptor.Encrypt([]byte(passwordField.(*tview.InputField).GetText()), t.App.GetUserKey())
 	if err != nil {
-		panic(err)
+		t.showError("Cannot encrypt password")
+		return
 	}
 
 	t.App.StatusCh <- t.App.Requestor.NewRequest(context.Background(), t.App.JWT).UpdateCredsData(
